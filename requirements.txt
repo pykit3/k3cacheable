@@ -1,4 +1,0 @@
--r _building/requirements.txt
-
-
-msgpack>=1.0.0

@@ -23,7 +23,7 @@ class LRU(object):
 
     If size of `LRU` is greater than `capacity` * 1.5,
     clean items from head until size is equal to `capacity`.
-    
+
     .. highlight:: python
     .. code-block:: python
 
@@ -51,6 +51,7 @@ class LRU(object):
             print('key not in lru')
         ...
     """
+
     def __init__(self, capacity, timeout=60):
         """
         Least Recently Used Cache.
@@ -64,39 +65,33 @@ class LRU(object):
         self.timeout = timeout
         self.size = 0
         self.items = {}
-        self.head = {'next': None, 'pre': None}
+        self.head = {"next": None, "pre": None}
         self.tail = self.head
 
     def __getitem__(self, key):
-
         with self.lock:
             now = int(time.time())
             item = self.items[key]
 
-            if now > item['tm'] + self.timeout:
+            if now > item["tm"] + self.timeout:
                 self._del_item(item)
-                raise KeyError('{k} is timeout'.format(k=key))
+                raise KeyError("{k} is timeout".format(k=key))
 
             self._move_to_tail(item)
 
-            return item['val']
+            return item["val"]
 
     def __setitem__(self, key, val):
-
         with self.lock:
             if key in self.items:
                 item = self.items[key]
-                item['val'] = val
-                item['tm'] = int(time.time())
+                item["val"] = val
+                item["tm"] = int(time.time())
 
                 self._move_to_tail(item)
 
             else:
-                self.items[key] = {'key': key,
-                                   'val': val,
-                                   'pre': None,
-                                   'next': None,
-                                   'tm': int(time.time())}
+                self.items[key] = {"key": key, "val": val, "pre": None, "next": None, "tm": int(time.time())}
 
                 self._move_to_tail(self.items[key])
 
@@ -106,40 +101,34 @@ class LRU(object):
                     self._cleanup()
 
     def _remove_item(self, item):
-
-        item['pre']['next'] = item['next']
-        if item['next'] is not None:
-            item['next']['pre'] = item['pre']
+        item["pre"]["next"] = item["next"]
+        if item["next"] is not None:
+            item["next"]["pre"] = item["pre"]
         else:
-            self.tail = item['pre']
+            self.tail = item["pre"]
 
     def _move_to_tail(self, item):
-
-        if item['pre'] is not None:
+        if item["pre"] is not None:
             self._remove_item(item)
 
-        self.tail['next'] = item
-        item['pre'] = self.tail
-        item['next'] = None
+        self.tail["next"] = item
+        item["pre"] = self.tail
+        item["next"] = None
         self.tail = item
 
     def _del_item(self, item):
-
-        del self.items[item['key']]
+        del self.items[item["key"]]
         self._remove_item(item)
         self.size -= 1
 
     def _cleanup(self):
-
         while self.size > self.capacity:
-            item = self.head['next']
+            item = self.head["next"]
             self._del_item(item)
 
 
 class Cacheable(object):
-
-    def __init__(self, capacity=1024 * 4, timeout=60,
-                    is_deepcopy=True, is_pack=False, mutex_update=False):
+    def __init__(self, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, mutex_update=False):
         """
         Create a `LRU` object, all items will be cached in it.
         :param capacity: for create `LRU` object, default is 1024 * 4
@@ -166,16 +155,13 @@ class Cacheable(object):
         self.mutex_update = mutex_update
 
     def _arg_str(self, args, argkv):
-
         argkv = [(k, v) for k, v in list(argkv.items())]
         argkv.sort()
 
         return str([args, argkv])
 
     def _cache_wrapper(self, fun):
-
         def func_wrapper(*args, **argkv):
-
             val = None
             generate_key = self._arg_str(args, argkv)
 
@@ -211,8 +197,7 @@ class Cacheable(object):
 caches = {}
 
 
-def cache(name, capacity=1024 * 4, timeout=60,
-        is_deepcopy=True, is_pack=False, mutex_update=False):
+def cache(name, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, mutex_update=False):
     """
     If not exist, create a `cacheable.Cacheable` and save it, else use exist one.
     :param name: for distinguishing different `cacheable.Cacheable`
@@ -244,8 +229,7 @@ def cache(name, capacity=1024 * 4, timeout=60,
     """
     c = caches.get(name)
     if c is None:
-        c = Cacheable(capacity=capacity, timeout=timeout,
-                      is_deepcopy=is_deepcopy, mutex_update=mutex_update)
+        c = Cacheable(capacity=capacity, timeout=timeout, is_deepcopy=is_deepcopy, mutex_update=mutex_update)
         caches[name] = c
 
     return c._cache_wrapper

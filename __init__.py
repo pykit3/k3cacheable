@@ -6,8 +6,9 @@ Cache data which access frequently.
 # from .proc import CalledProcessError
 # from .proc import ProcError
 
-__version__ = "0.1.0"
-__name__ = "k3cacheable"
+from importlib.metadata import version
+
+__version__ = version("k3cacheable")
 
 from .cacheable import (
     LRU,
@@ -16,7 +17,7 @@ from .cacheable import (
 )
 
 __all__ = [
-    'LRU',
-    'Cacheable',
-    'cache',
+    "LRU",
+    "Cacheable",
+    "cache",
 ]

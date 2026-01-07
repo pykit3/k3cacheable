@@ -1,7 +1,6 @@
 # k3cacheable
 
 [![Action-CI](https://github.com/pykit3/k3cacheable/actions/workflows/python-package.yml/badge.svg)](https://github.com/pykit3/k3cacheable/actions/workflows/python-package.yml)
-[![Build Status](https://travis-ci.com/pykit3/k3cacheable.svg?branch=master)](https://travis-ci.com/pykit3/k3cacheable)
 [![Documentation Status](https://readthedocs.org/projects/k3cacheable/badge/?version=stable)](https://k3cacheable.readthedocs.io/en/stable/?badge=stable)
 [![Package](https://img.shields.io/pypi/pyversions/k3cacheable)](https://pypi.org/project/k3cacheable)
 
