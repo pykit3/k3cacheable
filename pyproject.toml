@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "k3cacheable"
-version = "0.1.1"
+version = "0.1.2"
 description = "Cache data which access frequently"
 readme = "README.md"
 license = {text = "MIT"}
