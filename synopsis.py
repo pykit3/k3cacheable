@@ -1,5 +1,6 @@
-import k3cacheable
 import time
+
+import k3cacheable
 
 # create a `LRU`, capacity:10 timeout:60
 c = k3cacheable.LRU(10, 60)
@@ -40,7 +41,7 @@ data = get_data("key1")
 
 
 # define a method with a decorator
-class MethodCache(object):
+class MethodCache:
     @k3cacheable.cache("method_cache_name", capacity=100, timeout=60, is_deepcopy=False, mutex_update=False)
     def get_data(self, param):
         return cache_data.get(param, "")

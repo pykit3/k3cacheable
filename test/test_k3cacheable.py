@@ -1,6 +1,3 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import _thread
 import time
 import unittest
@@ -61,12 +58,12 @@ class TestLRU(unittest.TestCase):
         for insert_count, exist_items, cleanup_items in cases:
             lru = k3cacheable.LRU(capacity, 10)
             for i in range(insert_count):
-                lru[i] = "val%d" % (i)
+                lru[i] = f"val{i}"
 
             for i in range(insert_count):
                 try:
                     val = lru[i]
-                    self.assertEqual(val, "val%d" % (i))
+                    self.assertEqual(val, f"val{i}")
                     self.assertEqual(lru.tail["key"], i)
                     self.assertIn(i, exist_items)
 
@@ -118,20 +115,20 @@ class TestCacheable(unittest.TestCase):
 
     def test_get_items_from_cache(self):
         cache_items = {}
-        for key in need_cache_data.keys():
+        for key in need_cache_data:
             cache_items[key] = get_cache_data(key)
 
         time.sleep(0.1)
-        for key in need_cache_data.keys():
+        for key in need_cache_data:
             self.assertEqual(get_cache_data(key), cache_items[key])
 
     def test_get_items_from_cache_use_method(self):
         cache_items = {}
-        for key in need_cache_data.keys():
+        for key in need_cache_data:
             cache_items[key] = self._method_cache_data(key)
 
         time.sleep(0.1)
-        for key in need_cache_data.keys():
+        for key in need_cache_data:
             self.assertEqual(self._method_cache_data(key), cache_items[key])
 
     def test_cache_item_timeout_and_cache_again(self):

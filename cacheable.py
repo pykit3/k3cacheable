@@ -1,17 +1,15 @@
-#!/usr/bin/env python
-# coding: utf-8
-
 import copy
 import logging
 import threading
 import time
+
 import msgpack
 
 logger = logging.getLogger(__name__)
 _lock_mutex_update = threading.RLock()
 
 
-class LRU(object):
+class LRU:
     """
     `LRU` contain `__getitem__` and `__setitem__`,
     so can get value and set value like `dict`
@@ -75,7 +73,7 @@ class LRU(object):
 
             if now > item["tm"] + self.timeout:
                 self._del_item(item)
-                raise KeyError("{k} is timeout".format(k=key))
+                raise KeyError(f"{key} is timeout")
 
             self._move_to_tail(item)
 
@@ -127,7 +125,7 @@ class LRU(object):
             self._del_item(item)
 
 
-class Cacheable(object):
+class Cacheable:
     def __init__(self, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, mutex_update=False):
         """
         Create a `LRU` object, all items will be cached in it.

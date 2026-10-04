@@ -21,11 +21,12 @@ import k3cacheable
 
 # LRU cache with capacity=10, timeout=60 seconds
 c = k3cacheable.LRU(10, 60)
-c['key'] = 'val'
-val = c['key']
+c["key"] = "val"
+val = c["key"]
+
 
 # Function decorator
-@k3cacheable.cache('my_cache', capacity=100, timeout=60)
+@k3cacheable.cache("my_cache", capacity=100, timeout=60)
 def get_data(param):
     return expensive_operation(param)
 ```
