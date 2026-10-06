@@ -148,6 +148,13 @@ class TestCacheable(unittest.TestCase):
     def test_get_deepcopy_item_from_cache(self):
         self.assertIsNot(get_deepcopy_of_cache_data("key1"), get_deepcopy_of_cache_data("key1"))
 
+    def test_get_pack_item_from_cache(self):
+        # With `is_deepcopy=False`, only unpacking the cached msgpack bytes gives a new object on each call.
+        first = get_pack_of_cache_data("key1")
+        second = get_pack_of_cache_data("key1")
+        self.assertEqual({"key": "key1"}, first)
+        self.assertIsNot(first, second)
+
     def test_get_concurrent_update_cache_data(self):
         result = {}
 
@@ -199,6 +206,11 @@ class TestCacheable(unittest.TestCase):
 @k3cacheable.cache("deepcopy_of_cache_data", capacity=100, timeout=60, is_deepcopy=True)
 def get_deepcopy_of_cache_data(key):
     return need_cache_data.get(key, {})
+
+
+@k3cacheable.cache("pack_of_cache_data", capacity=100, timeout=60, is_deepcopy=False, is_pack=True)
+def get_pack_of_cache_data(key):
+    return {"key": key}
 
 
 @k3cacheable.cache("cache_data", capacity=100, timeout=4, is_deepcopy=False)

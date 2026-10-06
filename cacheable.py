@@ -227,7 +227,9 @@ def cache(name, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, 
     """
     c = caches.get(name)
     if c is None:
-        c = Cacheable(capacity=capacity, timeout=timeout, is_deepcopy=is_deepcopy, mutex_update=mutex_update)
+        c = Cacheable(
+            capacity=capacity, timeout=timeout, is_deepcopy=is_deepcopy, is_pack=is_pack, mutex_update=mutex_update
+        )
         caches[name] = c
 
     return c._cache_wrapper
