@@ -202,6 +202,18 @@ class TestCacheable(unittest.TestCase):
         for args, argkv, expect_str in cases:
             self.assertEqual(k3cacheable.Cacheable()._arg_str(args, argkv), expect_str)
 
+    def test_functions_sharing_cache_name(self):
+        @k3cacheable.cache("shared_by_two_functions", capacity=10, timeout=60, is_deepcopy=False)
+        def get_aa(key):
+            return "aa-" + key
+
+        @k3cacheable.cache("shared_by_two_functions", capacity=10, timeout=60, is_deepcopy=False)
+        def get_bb(key):
+            return "bb-" + key
+
+        self.assertEqual("aa-k", get_aa("k"))
+        self.assertEqual("bb-k", get_bb("k"))
+
 
 @k3cacheable.cache("deepcopy_of_cache_data", capacity=100, timeout=60, is_deepcopy=True)
 def get_deepcopy_of_cache_data(key):

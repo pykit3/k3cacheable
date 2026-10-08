@@ -161,7 +161,8 @@ class Cacheable:
     def _cache_wrapper(self, fun):
         def func_wrapper(*args, **argkv):
             val = None
-            generate_key = self._arg_str(args, argkv)
+            # Functions that use the same cache name share one LRU, so the key includes the function.
+            generate_key = (fun, self._arg_str(args, argkv))
 
             try:
                 val = self.lru[generate_key]
