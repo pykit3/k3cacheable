@@ -1,6 +1,7 @@
 import _thread
 import time
 import unittest
+from unittest import mock
 
 import k3cacheable
 
@@ -26,16 +27,18 @@ class TestLRU(unittest.TestCase):
 
         self.assertEqual(order_keys, lru_keys)
 
-    def test_lru_timeout(self):
+    @mock.patch("time.time")
+    def test_lru_timeout(self, mock_time):
         cases = (
             ("k1", "v1", 3, True),
             ("k2", "v2", 1, False),
         )
 
+        mock_time.return_value = 1000.0
         lru = k3cacheable.LRU(10, 2)
         for key, val, sleep_time, is_timeout in cases:
             lru[key] = val
-            time.sleep(sleep_time)
+            mock_time.return_value += sleep_time
 
             try:
                 lru[key]
