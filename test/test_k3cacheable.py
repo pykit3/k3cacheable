@@ -105,6 +105,10 @@ class TestLRU(unittest.TestCase):
 
                 self.assertEqual(lru.size, expect_size)
 
+    def test_lru_negative_capacity(self):
+        with self.assertRaises(ValueError):
+            k3cacheable.LRU(-1)
+
 
 class TestCacheable(unittest.TestCase):
     @k3cacheable.cache("method_cache_data", capacity=10, timeout=4, is_deepcopy=False)

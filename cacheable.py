@@ -57,6 +57,10 @@ class LRU:
         clean old items until the size is equal to `capacity`
         :param timeout: max cache time of item, unit is second, default is 60
         """
+        # A negative capacity makes _cleanup() run past the last item.
+        if capacity < 0:
+            raise ValueError(f"capacity must not be negative: {capacity!r}")
+
         self.lock = threading.RLock()
         self.capacity = capacity
         self.cleanup_threshold = int(capacity * 1.5)
