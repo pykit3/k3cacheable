@@ -1,4 +1,5 @@
 import _thread
+import threading
 import time
 import unittest
 from unittest import mock
@@ -195,6 +196,36 @@ class TestCacheable(unittest.TestCase):
             time.sleep(0.1)
 
         self.assertIs(result["key1"], result["key2"])
+
+    def test_mutex_update_per_cache(self):
+        started = threading.Event()
+        release = threading.Event()
+
+        @k3cacheable.cache("mutex_update_per_cache_slow", mutex_update=True)
+        def slow():
+            started.set()
+            release.wait()
+            return "slow"
+
+        @k3cacheable.cache("mutex_update_per_cache_fast", mutex_update=True)
+        def fast():
+            return "fast"
+
+        th_slow = threading.Thread(target=slow)
+        th_slow.start()
+        started.wait()
+
+        # fast() uses another cache, so it does not wait for slow() to finish its update.
+        rst = []
+        th_fast = threading.Thread(target=lambda: rst.append(fast()))
+        th_fast.start()
+        th_fast.join(timeout=5)
+        done = list(rst)
+
+        release.set()
+        th_slow.join()
+        th_fast.join()
+        self.assertEqual(["fast"], done)
 
     def test_generate_lru_key(self):
         cases = (

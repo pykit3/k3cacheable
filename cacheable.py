@@ -6,7 +6,6 @@ import time
 import msgpack
 
 logger = logging.getLogger(__name__)
-_lock_mutex_update = threading.RLock()
 
 
 class LRU:
@@ -155,6 +154,7 @@ class Cacheable:
         self.is_deepcopy = is_deepcopy
         self.is_pack = is_pack
         self.mutex_update = mutex_update
+        self.update_lock = threading.RLock()
 
     def _arg_str(self, args, argkv):
         argkv = [(k, v) for k, v in list(argkv.items())]
@@ -172,7 +172,7 @@ class Cacheable:
                 val = self.lru[generate_key]
             except KeyError:
                 if self.mutex_update:
-                    with _lock_mutex_update:
+                    with self.update_lock:
                         try:
                             val = self.lru[generate_key]
                         except KeyError:
