@@ -227,6 +227,15 @@ class TestCacheable(unittest.TestCase):
         th_fast.join()
         self.assertEqual(["fast"], done)
 
+    def test_wrapper_keeps_function_metadata(self):
+        @k3cacheable.cache("wrapper_keeps_function_metadata")
+        def documented(key):
+            """Return the key."""
+            return key
+
+        self.assertEqual("documented", documented.__name__)
+        self.assertEqual("Return the key.", documented.__doc__)
+
     def test_generate_lru_key(self):
         cases = (
             ((), {}, "[(), []]"),

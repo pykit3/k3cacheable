@@ -1,5 +1,6 @@
 import contextlib
 import copy
+import functools
 import logging
 import threading
 import time
@@ -164,6 +165,7 @@ class Cacheable:
         return str([args, argkv])
 
     def _cache_wrapper(self, fun):
+        @functools.wraps(fun)
         def func_wrapper(*args, **argkv):
             val = None
             # Functions that use the same cache name share one LRU, so the key includes the function.
