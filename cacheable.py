@@ -1,3 +1,4 @@
+import contextlib
 import copy
 import logging
 import threading
@@ -171,20 +172,15 @@ class Cacheable:
             try:
                 val = self.lru[generate_key]
             except KeyError:
-                if self.mutex_update:
-                    with self.update_lock:
-                        try:
-                            val = self.lru[generate_key]
-                        except KeyError:
-                            val = fun(*args, **argkv)
-                            if self.is_pack:
-                                val = msgpack.packb(val, use_bin_type=True)
-                            self.lru[generate_key] = val
-                else:
-                    val = fun(*args, **argkv)
-                    if self.is_pack:
-                        val = msgpack.packb(val, use_bin_type=True)
-                    self.lru[generate_key] = val
+                update_lock = self.update_lock if self.mutex_update else contextlib.nullcontext()
+                with update_lock:
+                    try:
+                        val = self.lru[generate_key]
+                    except KeyError:
+                        val = fun(*args, **argkv)
+                        if self.is_pack:
+                            val = msgpack.packb(val, use_bin_type=True)
+                        self.lru[generate_key] = val
 
             if self.is_pack:
                 val = msgpack.unpackb(val, raw=False)
