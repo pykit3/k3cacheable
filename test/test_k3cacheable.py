@@ -238,16 +238,58 @@ class TestCacheable(unittest.TestCase):
 
     def test_generate_lru_key(self):
         cases = (
-            ((), {}, "[(), []]"),
-            ((1), {1: "val_1"}, "[1, [(1, 'val_1')]]"),
-            ((1), {"a": "val_a"}, "[1, [('a', 'val_a')]]"),
-            (("c"), {"b": "val_b"}, "['c', [('b', 'val_b')]]"),
-            ((1, "c"), {"a": "val_a", "b": "val_b"}, "[(1, 'c'), [('a', 'val_a'), ('b', 'val_b')]]"),
-            (("c", 1), {"b": "val_b", "a": "val_a"}, "[('c', 1), [('a', 'val_a'), ('b', 'val_b')]]"),
+            ((), {}, ((), ())),
+            ((1,), {"a": "val_a"}, (((int, 1),), (("a", (str, "val_a")),))),
+            ((1.0, True), {}, (((float, 1.0), (bool, True)), ())),
+            (
+                ("c", 1),
+                {"b": "val_b", "a": "val_a"},
+                (((str, "c"), (int, 1)), (("a", (str, "val_a")), ("b", (str, "val_b")))),
+            ),
+            (([1, 2],), {"a": {"b": 1}}, (((list, "[1, 2]"),), (("a", (dict, "{'b': 1}")),))),
         )
 
-        for args, argkv, expect_str in cases:
-            self.assertEqual(k3cacheable.Cacheable()._arg_str(args, argkv), expect_str)
+        for args, argkv, expected in cases:
+            key = k3cacheable.Cacheable()._arg_key(args, argkv)
+            self.assertEqual(expected, key)
+
+    def test_args_with_same_repr(self):
+        # Distinct args with the same repr must not share a cached result.
+        class Box:
+            def __init__(self, v):
+                self.v = v
+
+            def __repr__(self):
+                return "Box"
+
+        calls = []
+
+        @k3cacheable.cache("args_with_same_repr", capacity=10, timeout=60, is_deepcopy=False)
+        def get(box):
+            calls.append(box.v)
+            return box.v
+
+        box1 = Box(1)
+        box2 = Box(2)
+
+        results = [get(box1), get(box2), get(box1), get(box2)]
+        self.assertEqual([1, 2, 1, 2], results)
+        self.assertEqual([1, 2], calls)
+
+    def test_args_of_equal_value_and_other_type(self):
+        calls = []
+
+        @k3cacheable.cache("args_of_equal_value_and_other_type", capacity=10, timeout=60, is_deepcopy=False)
+        def get(v):
+            calls.append(v)
+            return repr(v)
+
+        results = [get(1), get(1.0), get(True), get(1), get([1]), get([1])]
+        self.assertEqual(["1", "1.0", "True", "1", "[1]", "[1]"], results)
+
+        # 1, 1.0 and True compare equal, so the types show that each one was called.
+        call_types = [type(v) for v in calls]
+        self.assertEqual([int, float, bool, list], call_types)
 
     def test_functions_sharing_cache_name(self):
         @k3cacheable.cache("shared_by_two_functions", capacity=10, timeout=60, is_deepcopy=False)

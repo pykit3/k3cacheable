@@ -130,6 +130,17 @@ class LRU:
             self._del_item(item)
 
 
+def _value_key(val: object) -> tuple[type, object]:
+    # The type keeps 1, 1.0 and True apart, which compare equal.
+    try:
+        hash(val)
+    except TypeError:
+        # An unhashable value, such as a list, is keyed by its repr.
+        return (type(val), repr(val))
+
+    return (type(val), val)
+
+
 class Cacheable:
     def __init__(self, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, mutex_update=False):
         """
@@ -158,18 +169,19 @@ class Cacheable:
         self.mutex_update = mutex_update
         self.update_lock = threading.RLock()
 
-    def _arg_str(self, args, argkv):
-        argkv = [(k, v) for k, v in list(argkv.items())]
-        argkv.sort()
+    def _arg_key(self, args: tuple, argkv: dict) -> tuple:
+        # Keying by value, not by repr, keeps apart two objects whose repr is the same.
+        args_key = tuple(_value_key(v) for v in args)
+        argkv_key = tuple((k, _value_key(v)) for k, v in sorted(argkv.items()))
 
-        return str([args, argkv])
+        return (args_key, argkv_key)
 
     def _cache_wrapper(self, fun):
         @functools.wraps(fun)
         def func_wrapper(*args, **argkv):
             val = None
             # Functions that use the same cache name share one LRU, so the key includes the function.
-            generate_key = (fun, self._arg_str(args, argkv))
+            generate_key = (fun, self._arg_key(args, argkv))
 
             try:
                 val = self.lru[generate_key]
@@ -208,6 +220,10 @@ def cache(name, capacity=1024 * 4, timeout=60, is_deepcopy=True, is_pack=False, 
     :param mutex_update: used as 'utex_update'of 'acheable.Cacheable'
     :return: A decorator function that it checks whether the data has been cached, if not or has been timeout,cache and
     return the data.
+
+    A call hits the cache when its arguments equal those of a cached call and have the same types.
+    A hashable argument is compared by value, so objects without `__eq__` are compared by identity.
+    An unhashable argument, such as a `list`, is compared by its `repr`.
 
     .. highlight:: python
     .. code-block:: python
